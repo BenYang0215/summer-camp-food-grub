@@ -3,6 +3,5 @@ summer camp food
 
 Group members:
 
-Ada Lovelace adalovelace@csu.fullerton.edu
-
-Charles Babbage charlesbab@csu.fullerton.edu
+Benjamin Yang eternaldj4@csu.fullerton.edu  
+Gurman Gill gurman662@csu.fullerton.edu
