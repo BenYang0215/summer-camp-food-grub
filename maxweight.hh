@@ -19,7 +19,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
+#include <algorithm>
 
 // One food item available for purchase.
 class FoodItem
@@ -231,10 +231,35 @@ std::unique_ptr<FoodVector> filter_food_vector
 	int total_size
 )
 {
-// TODO: implement this function, then delete the return statement below
-return nullptr;
+	// TODO: implement this function, then delete the return statement below
+	std::unique_ptr<FoodVector> filtered(new FoodVector);
+
+    // iterate over source FoodVector
+    for (auto& food : source)
+    {
+        // if food weight is within the specified bounds
+        if (food->weight() >= min_weight && food->weight() <= max_weight)
+        {
+            // add the food item to the filtered vector
+            filtered->push_back(food);
+
+            // stop adding items at limit
+            if (filtered->size() == static_cast<long long unsigned int>(total_size))
+                break;
+        }
+    }
+
+    // return the filtered vector
+    return filtered;
 }
 
+// custom comparator for sorting FoodItems based on calories ratio
+struct CompareFoodItems {
+    bool operator()(const std::shared_ptr<FoodItem>& a, const std::shared_ptr<FoodItem>& b) const {
+		// greater than for descending order
+        return (a->weight() / a->calorie()) > (b->weight() / b->calorie());
+    }
+};
 
 // Compute the optimal set of food items with a greedy algorithm.
 // Specifically, among the food items that fit within a total_calorie,
@@ -247,10 +272,26 @@ std::unique_ptr<FoodVector> greedy_max_weight
 	double total_calorie
 )
 {
-// TODO: implement this function, then delete the return statement below
-return nullptr;
-}
+	// TODO: implement this function, then delete the return statement below
+	// make a copy of foods vector to be sorted
+	FoodVector sortedFoods = foods;  
 
+	// sort foods descending based on calorie ratio
+    std::sort(sortedFoods.begin(), sortedFoods.end(), CompareFoodItems());
+
+    std::unique_ptr<FoodVector> result(new FoodVector);
+    double result_calories = 0.0;
+
+    // iterate over sorted foods and add while foods in list and less than total cals
+    for (auto& food : sortedFoods) {
+        if ((result_calories + food->calorie()) <= total_calorie) {
+            result->push_back(food);
+            result_calories += food->calorie();
+        }
+    }
+
+    return result;
+}
 
 // Compute the optimal set of food items with a exhaustive search algorithm.
 // Specifically, among all subsets of food items, return the subset 
@@ -263,6 +304,36 @@ std::unique_ptr<FoodVector> exhaustive_max_weight
 	double total_calorie
 )
 {
-// TODO: implement this function, then delete the return statement below
-	return nullptr;
+	// TODO: implement this function, then delete the return statement below
+	// prevent overflow
+	assert(foods.size() < 64); 
+
+    std::unique_ptr<FoodVector> best = nullptr;
+    double bestWeight = 0;
+
+	// loop over all subsets
+    uint64_t n = foods.size();
+    for (uint64_t bits = 0; bits < (1ull << n); ++bits) { 
+        std::unique_ptr<FoodVector> candidate(new FoodVector);
+        double candidateCalorie = 0;
+        double candidateWeight = 0;
+
+        for (uint64_t j = 0; j < n; ++j) {
+			// if the j-th bit is set
+            if (((bits >> j) & 1) == 1) {
+                candidate->push_back(foods[j]);
+                candidateCalorie += foods[j]->calorie();
+                candidateWeight += foods[j]->weight();
+            }
+        }
+
+		// update best if this subset is better
+        if (candidateCalorie <= total_calorie && 
+            (best == nullptr || candidateWeight > bestWeight)) {
+            best = std::move(candidate);
+            bestWeight = candidateWeight;
+        }
+    }
+
+    return best;
 }
